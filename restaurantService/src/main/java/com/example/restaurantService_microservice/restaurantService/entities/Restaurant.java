@@ -1,6 +1,7 @@
 package com.example.restaurantService_microservice.restaurantService.entities;
 
 
+import com.example.restaurantService_microservice.restaurantService.entities.external_foodService.FoodItem;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -31,6 +32,9 @@ public class Restaurant {
     private boolean open = false;
     private LocalTime openTime;
     private LocalTime closeTime;
+
+    @OneToMany(mappedBy = "id", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<FoodItem> foodItemList;
 
     @Lob
     private String aboutRestaurant;
