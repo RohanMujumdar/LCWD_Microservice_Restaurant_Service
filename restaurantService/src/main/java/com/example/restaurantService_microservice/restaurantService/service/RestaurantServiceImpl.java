@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 @Service
 public class RestaurantServiceImpl implements RestaurantService {
 
-    private static final Logger logger = LoggerFactory.getLogger(RestaurantServiceImpl.class);
 
     @Autowired
     private RestaurantRepository restaurantRepository;
