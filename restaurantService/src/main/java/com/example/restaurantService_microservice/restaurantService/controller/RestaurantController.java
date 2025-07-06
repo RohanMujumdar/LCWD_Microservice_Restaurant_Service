@@ -4,6 +4,8 @@ import com.example.restaurantService_microservice.restaurantService.dto.Restaura
 import com.example.restaurantService_microservice.restaurantService.dto.external_foodService.FoodCategoryDto;
 import com.example.restaurantService_microservice.restaurantService.dto.external_foodService.FoodItemDto;
 import com.example.restaurantService_microservice.restaurantService.service.RestaurantService;
+import io.github.resilience4j.ratelimiter.RequestNotPermitted;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,9 +50,22 @@ public class RestaurantController {
         return ResponseEntity.ok(updated);
     }
 
+    int counter = 0;
+
     @GetMapping("/{id}")
     public ResponseEntity<RestaurantDto> getRestaurantById(@PathVariable String id) {
         RestaurantDto restaurant = restaurantService.getById(id);
+        System.out.println("Retried");
+
+        counter++;
+        if(counter<=3)
+        {
+            System.out.println("Retry Number: "+ counter);
+
+            throw new RuntimeException("failed");
+        }
+
+
         return ResponseEntity.ok(restaurant);
     }
 
@@ -61,11 +76,20 @@ public class RestaurantController {
         return ResponseEntity.ok(foodItemDtoList);
     }
 
+    @RateLimiter(name = "get-all-restaurants-rate-limit", fallbackMethod = "fallBackRateLimiter")
     @GetMapping("/food-items/")
     public ResponseEntity<List<FoodItemDto>> getAllFoodItems()
     {
         List<FoodItemDto> allFoodItems = restaurantService.getAllFoodItems();
         return ResponseEntity.ok(allFoodItems);
+    }
+
+//    The RequestNotPermitted ex is required for fallBackMethod to work.
+    public ResponseEntity<String> fallBackRateLimiter(RequestNotPermitted ex)
+    {
+        return ResponseEntity.
+                status(HttpStatus.TOO_MANY_REQUESTS).
+                body("Too many Requests, please try later");
     }
 
     @GetMapping("/food-categories/")
